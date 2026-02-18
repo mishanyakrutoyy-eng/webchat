@@ -50,7 +50,6 @@
             text-align: center;
             color: #6f9e6f;
             margin-bottom: 30px;
-            font-size: 1rem;
         }
         .input-group {
             margin-bottom: 20px;
@@ -86,7 +85,6 @@
             font-weight: bold;
             cursor: pointer;
             margin: 10px 0;
-            text-transform: uppercase;
         }
         .btn:hover {
             background: #3f8f3f;
@@ -240,18 +238,11 @@
         .send-btn:hover {
             background: #3f8f3f;
         }
-        @media (max-width: 600px) {
-            .message {
-                max-width: 95%;
-            }
-            .chat-title {
-                font-size: 1rem;
-            }
-        }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <!-- AUTH -->
     <div id="authContainer">
         <div class="auth-box">
             <div class="title">WEBGOBLINS</div>
@@ -270,7 +261,6 @@
         </div>
     </div>
 
-    <!-- CHAT -->
     <div id="chatContainer" class="chat-box hidden">
         <div class="chat-header">
             <span class="chat-title">WEBGOBLINS CLAN</span>
@@ -290,24 +280,31 @@
     </div>
 
     <script>
-        // ========== ПРОСТОЕ ХРАНИЛИЩЕ В ПАМЯТИ ==========
-        // Это работает сразу, без Firebase
-        let users = JSON.parse(localStorage.getItem('wg_users')) || {};
-        let messages = JSON.parse(localStorage.getItem('wg_messages')) || [];
-        let currentUser = null;
-        let messagesArea = document.getElementById('messagesArea');
-        let authContainer = document.getElementById('authContainer');
-        let chatContainer = document.getElementById('chatContainer');
-        let loginField = document.getElementById('loginField');
-        let passwordField = document.getElementById('passwordField');
-        let authStatus = document.getElementById('authStatus');
-        let currentUserSpan = document.getElementById('currentUser');
-        let messageField = document.getElementById('messageField');
+        // ===== ТВОИ ДАННЫЕ FIREBASE =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyBp8d7AizkY5R5nJc5n8tGJ5KXkLqW1dU8",
+            authDomain: "webgoblins-5073f.firebaseapp.com",
+            databaseURL: "https://webgoblins-5073f-default-rtdb.firebaseio.com",
+            projectId: "webgoblins-5073f",
+            storageBucket: "webgoblins-5073f.firebasestorage.app",
+            messagingSenderId: "109876543210",
+            appId: "1:109876543210:web:abc123def456"
+        };
 
-        function saveData() {
-            localStorage.setItem('wg_users', JSON.stringify(users));
-            localStorage.setItem('wg_messages', JSON.stringify(messages));
-        }
+        // Инициализация
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentUser = null;
+        
+        const authContainer = document.getElementById('authContainer');
+        const chatContainer = document.getElementById('chatContainer');
+        const loginField = document.getElementById('loginField');
+        const passwordField = document.getElementById('passwordField');
+        const authStatus = document.getElementById('authStatus');
+        const messagesArea = document.getElementById('messagesArea');
+        const messageField = document.getElementById('messageField');
+        const currentUserSpan = document.getElementById('currentUser');
 
         function getTime() {
             let d = new Date();
@@ -335,7 +332,7 @@
             
             let time = document.createElement('span');
             time.className = 'message-time';
-            time.textContent = msg.time || getTime();
+            time.textContent = msg.time;
             
             header.appendChild(author);
             header.appendChild(time);
@@ -350,23 +347,12 @@
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
-        function addSystem(msg) {
+        function addSystem(text) {
             let div = document.createElement('div');
             div.className = 'system-message';
-            div.textContent = msg;
+            div.textContent = text;
             messagesArea.appendChild(div);
             messagesArea.scrollTop = messagesArea.scrollHeight;
-        }
-
-        function loadMessages() {
-            messagesArea.innerHTML = '';
-            if (messages.length === 0) {
-                addSystem('> ДОБРО ПОЖАЛОВАТЬ В КЛАН <');
-            } else {
-                for (let i = messages.length - 1; i >= 0; i--) {
-                    addMessage(messages[i], messages[i].username === currentUser);
-                }
-            }
         }
 
         function hashPass(pass) {
@@ -378,8 +364,32 @@
             return Math.abs(hash).toString(16);
         }
 
-        // ========== ОБРАБОТЧИКИ ==========
-        document.getElementById('loginBtn').onclick = function() {
+        // Проверка подключения
+        db.ref('.info/connected').on('value', (snap) => {
+            if (snap.val() === true) {
+                console.log('✅ Firebase connected');
+            } else {
+                console.log('❌ Firebase disconnected');
+            }
+        });
+
+        // Загрузка сообщений
+        db.ref('messages').limitToLast(50).on('value', (snapshot) => {
+            messagesArea.innerHTML = '';
+            let msgs = [];
+            snapshot.forEach(child => msgs.push(child.val()));
+            
+            if (msgs.length === 0) {
+                addSystem('> ДОБРО ПОЖАЛОВАТЬ В КЛАН <');
+            } else {
+                for (let i = msgs.length - 1; i >= 0; i--) {
+                    addMessage(msgs[i], msgs[i].username === currentUser);
+                }
+            }
+        });
+
+        // Логин
+        document.getElementById('loginBtn').onclick = () => {
             let username = loginField.value.trim();
             let password = passwordField.value.trim();
             
@@ -390,21 +400,29 @@
             
             let hash = hashPass(password);
             
-            if (users[username] && users[username].password === hash) {
-                currentUser = username;
-                currentUserSpan.textContent = username;
-                authContainer.style.display = 'none';
-                chatContainer.classList.remove('hidden');
-                loadMessages();
-                addSystem(`> ${username} ПРИСОЕДИНИЛСЯ <`);
-                loginField.value = '';
-                passwordField.value = '';
-            } else {
-                showStatus('НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ', true);
-            }
+            db.ref('users/' + username).once('value', (snapshot) => {
+                let user = snapshot.val();
+                if (user && user.password === hash) {
+                    currentUser = username;
+                    currentUserSpan.textContent = username;
+                    
+                    db.ref('online/' + username).set(true);
+                    
+                    authContainer.style.display = 'none';
+                    chatContainer.classList.remove('hidden');
+                    
+                    addSystem(`> ${username} ПРИСОЕДИНИЛСЯ <`);
+                    
+                    loginField.value = '';
+                    passwordField.value = '';
+                } else {
+                    showStatus('НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ', true);
+                }
+            });
         };
 
-        document.getElementById('registerBtn').onclick = function() {
+        // Регистрация
+        document.getElementById('registerBtn').onclick = () => {
             let username = loginField.value.trim();
             let password = passwordField.value.trim();
             
@@ -418,30 +436,35 @@
                 return;
             }
             
-            if (users[username]) {
-                showStatus('ПОЛЬЗОВАТЕЛЬ УЖЕ СУЩЕСТВУЕТ', true);
-                return;
-            }
-            
             let hash = hashPass(password);
-            users[username] = { username: username, password: hash };
-            saveData();
-            showStatus('РЕГИСТРАЦИЯ УСПЕШНА', false);
-            loginField.value = username;
-            passwordField.value = '';
+            
+            db.ref('users/' + username).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    showStatus('ПОЛЬЗОВАТЕЛЬ УЖЕ СУЩЕСТВУЕТ', true);
+                } else {
+                    db.ref('users/' + username).set({
+                        password: hash
+                    }).then(() => {
+                        showStatus('РЕГИСТРАЦИЯ УСПЕШНА', false);
+                        loginField.value = username;
+                        passwordField.value = '';
+                    });
+                }
+            });
         };
 
-        document.getElementById('logoutBtn').onclick = function() {
+        // Выход
+        document.getElementById('logoutBtn').onclick = () => {
             if (currentUser) {
                 addSystem(`> ${currentUser} ПОКИНУЛ ЧАТ <`);
                 currentUser = null;
                 authContainer.style.display = 'block';
                 chatContainer.classList.add('hidden');
-                messagesArea.innerHTML = '';
             }
         };
 
-        document.getElementById('sendBtn').onclick = function() {
+        // Отправка
+        document.getElementById('sendBtn').onclick = () => {
             let text = messageField.value.trim();
             if (!text || !currentUser) return;
             
@@ -451,30 +474,20 @@
                 time: getTime()
             };
             
-            messages.push(msg);
-            saveData();
+            db.ref('messages').push(msg);
             addMessage(msg, true);
             messageField.value = '';
         };
 
-        document.getElementById('messageField').onkeypress = function(e) {
+        messageField.onkeypress = (e) => {
             if (e.key === 'Enter') {
                 document.getElementById('sendBtn').click();
             }
         };
 
-        document.getElementById('passwordField').onkeypress = function(e) {
+        passwordField.onkeypress = (e) => {
             if (e.key === 'Enter') {
                 document.getElementById('loginBtn').click();
-            }
-        };
-
-        // Инициализация
-        window.onload = function() {
-            // Добавляем тестового пользователя
-            if (!users['admin']) {
-                users['admin'] = { username: 'admin', password: hashPass('admin123') };
-                saveData();
             }
         };
     </script>
