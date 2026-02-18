@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEBGOBLINS CLAN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        body {
+            background: #0a0f0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .auth-box {
+            max-width: 400px;
+            width: 100%;
+            background: #0f150f;
+            border: 2px solid #2f542f;
+            border-radius: 16px;
+            padding: 40px 30px;
+        }
+        .chat-box {
+            max-width: 900px;
+            width: 100%;
+            height: 90vh;
+            background: #0f150f;
+            border: 2px solid #2f542f;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .title {
+            text-align: center;
+            font-size: 2rem;
+            color: #8bc34a;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6f9e6f;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-label {
+            display: block;
+            color: #5f9f5f;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .input-field {
+            width: 100%;
+            background: #1a261a;
+            border: 2px solid #2f542f;
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #b0f0b0;
+            font-size: 1rem;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: #5f9f5f;
+        }
+        .btn {
+            width: 100%;
+            background: #2f6f2f;
+            border: 2px solid #5f9f5f;
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+            text-transform: uppercase;
+        }
+        .btn:hover {
+            background: #3f8f3f;
+        }
+        .btn.secondary {
+            background: transparent;
+            color: #8bc34a;
+        }
+        .btn.secondary:hover {
+            background: #1f3a1f;
+        }
+        .status {
+            color: #ff6f6f;
+            text-align: center;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+        .chat-header {
+            background: #1a261a;
+            padding: 15px 20px;
+            border-bottom: 2px solid #2f542f;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-title {
+            color: #8bc34a;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .online-status {
+            width: 10px;
+            height: 10px;
+            background: #4fdf4f;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #3fdf3f;
+        }
+        .username {
+            color: #b0f0b0;
+            font-weight: bold;
+        }
+        .logout {
+            background: transparent;
+            border: 2px solid #6f2f2f;
+            color: #ffb0b0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .logout:hover {
+            background: #6f2f2f;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 80%;
+            display: flex;
+            flex-direction: column;
+        }
+        .message.own {
+            align-self: flex-end;
+        }
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .message-author {
+            color: #8bc34a;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .message-author::before {
+            content: '@';
+            color: #5f9f5f;
+            margin-right: 2px;
+        }
+        .message-time {
+            color: #6f9e6f;
+            font-size: 0.7rem;
+        }
+        .message-text {
+            background: #1a261a;
+            border: 2px solid #2f542f;
+            border-radius: 12px;
+            padding: 10px 15px;
+            color: #e0f5e0;
+            word-break: break-word;
+        }
+        .message.own .message-text {
+            background: #1f3a1f;
+            border-color: #4f9f4f;
+        }
+        .system-message {
+            align-self: center;
+            background: #1a261a;
+            border: 2px solid #2f542f;
+            color: #6f9e6f;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+        .input-area {
+            background: #1a261a;
+            padding: 15px 20px;
+            border-top: 2px solid #2f542f;
+        }
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            background: #0f150f;
+            border: 2px solid #2f542f;
+            border-radius: 30px;
+            padding: 5px 5px 5px 15px;
+        }
+        .chat-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #b0f0b0;
+            font-size: 1rem;
+            padding: 10px 0;
+            outline: none;
+        }
+        .chat-input::placeholder {
+            color: #4f804f;
+        }
+        .send-btn {
+            background: #2f6f2f;
+            border: 2px solid #5f9f5f;
+            border-radius: 30px;
+            padding: 8px 20px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .send-btn:hover {
+            background: #3f8f3f;
+        }
+        @media (max-width: 600px) {
+            .message {
+                max-width: 95%;
+            }
+            .chat-title {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- AUTH -->
+    <div id="authContainer">
+        <div class="auth-box">
+            <div class="title">WEBGOBLINS</div>
+            <div class="subtitle">> КЛАН <</div>
+            <div class="input-group">
+                <div class="input-label">ЛОГИН</div>
+                <input type="text" class="input-field" id="loginField" placeholder="ник">
+            </div>
+            <div class="input-group">
+                <div class="input-label">ПАРОЛЬ</div>
+                <input type="password" class="input-field" id="passwordField" placeholder="******">
+            </div>
+            <button class="btn" id="loginBtn">ВОЙТИ</button>
+            <button class="btn secondary" id="registerBtn">РЕГИСТРАЦИЯ</button>
+            <div class="status" id="authStatus"></div>
+        </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="chatContainer" class="chat-box hidden">
+        <div class="chat-header">
+            <span class="chat-title">WEBGOBLINS CLAN</span>
+            <div class="user-info">
+                <span class="online-status"></span>
+                <span class="username" id="currentUser"></span>
+                <button class="logout" id="logoutBtn">ВЫЙТИ</button>
+            </div>
+        </div>
+        <div class="messages" id="messagesArea"></div>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" class="chat-input" id="messageField" placeholder="сообщение...">
+                <button class="send-btn" id="sendBtn">></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== ПРОСТОЕ ХРАНИЛИЩЕ В ПАМЯТИ ==========
+        // Это работает сразу, без Firebase
+        let users = JSON.parse(localStorage.getItem('wg_users')) || {};
+        let messages = JSON.parse(localStorage.getItem('wg_messages')) || [];
+        let currentUser = null;
+        let messagesArea = document.getElementById('messagesArea');
+        let authContainer = document.getElementById('authContainer');
+        let chatContainer = document.getElementById('chatContainer');
+        let loginField = document.getElementById('loginField');
+        let passwordField = document.getElementById('passwordField');
+        let authStatus = document.getElementById('authStatus');
+        let currentUserSpan = document.getElementById('currentUser');
+        let messageField = document.getElementById('messageField');
+
+        function saveData() {
+            localStorage.setItem('wg_users', JSON.stringify(users));
+            localStorage.setItem('wg_messages', JSON.stringify(messages));
+        }
+
+        function getTime() {
+            let d = new Date();
+            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+        }
+
+        function showStatus(msg, isError) {
+            authStatus.textContent = msg;
+            authStatus.style.color = isError ? '#ff6f6f' : '#8bc34a';
+            setTimeout(() => {
+                authStatus.textContent = '';
+            }, 3000);
+        }
+
+        function addMessage(msg, isOwn) {
+            let div = document.createElement('div');
+            div.className = `message ${isOwn ? 'own' : ''}`;
+            
+            let header = document.createElement('div');
+            header.className = 'message-header';
+            
+            let author = document.createElement('span');
+            author.className = 'message-author';
+            author.textContent = msg.username;
+            
+            let time = document.createElement('span');
+            time.className = 'message-time';
+            time.textContent = msg.time || getTime();
+            
+            header.appendChild(author);
+            header.appendChild(time);
+            
+            let text = document.createElement('div');
+            text.className = 'message-text';
+            text.textContent = msg.text;
+            
+            div.appendChild(header);
+            div.appendChild(text);
+            messagesArea.appendChild(div);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function addSystem(msg) {
+            let div = document.createElement('div');
+            div.className = 'system-message';
+            div.textContent = msg;
+            messagesArea.appendChild(div);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function loadMessages() {
+            messagesArea.innerHTML = '';
+            if (messages.length === 0) {
+                addSystem('> ДОБРО ПОЖАЛОВАТЬ В КЛАН <');
+            } else {
+                for (let i = messages.length - 1; i >= 0; i--) {
+                    addMessage(messages[i], messages[i].username === currentUser);
+                }
+            }
+        }
+
+        function hashPass(pass) {
+            let hash = 0;
+            for (let i = 0; i < pass.length; i++) {
+                hash = ((hash << 5) - hash) + pass.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16);
+        }
+
+        // ========== ОБРАБОТЧИКИ ==========
+        document.getElementById('loginBtn').onclick = function() {
+            let username = loginField.value.trim();
+            let password = passwordField.value.trim();
+            
+            if (!username || !password) {
+                showStatus('ЗАПОЛНИТЕ ВСЕ ПОЛЯ', true);
+                return;
+            }
+            
+            let hash = hashPass(password);
+            
+            if (users[username] && users[username].password === hash) {
+                currentUser = username;
+                currentUserSpan.textContent = username;
+                authContainer.style.display = 'none';
+                chatContainer.classList.remove('hidden');
+                loadMessages();
+                addSystem(`> ${username} ПРИСОЕДИНИЛСЯ <`);
+                loginField.value = '';
+                passwordField.value = '';
+            } else {
+                showStatus('НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ', true);
+            }
+        };
+
+        document.getElementById('registerBtn').onclick = function() {
+            let username = loginField.value.trim();
+            let password = passwordField.value.trim();
+            
+            if (!username || !password) {
+                showStatus('ЗАПОЛНИТЕ ВСЕ ПОЛЯ', true);
+                return;
+            }
+            
+            if (password.length < 3) {
+                showStatus('ПАРОЛЬ СЛИШКОМ КОРОТКИЙ', true);
+                return;
+            }
+            
+            if (users[username]) {
+                showStatus('ПОЛЬЗОВАТЕЛЬ УЖЕ СУЩЕСТВУЕТ', true);
+                return;
+            }
+            
+            let hash = hashPass(password);
+            users[username] = { username: username, password: hash };
+            saveData();
+            showStatus('РЕГИСТРАЦИЯ УСПЕШНА', false);
+            loginField.value = username;
+            passwordField.value = '';
+        };
+
+        document.getElementById('logoutBtn').onclick = function() {
+            if (currentUser) {
+                addSystem(`> ${currentUser} ПОКИНУЛ ЧАТ <`);
+                currentUser = null;
+                authContainer.style.display = 'block';
+                chatContainer.classList.add('hidden');
+                messagesArea.innerHTML = '';
+            }
+        };
+
+        document.getElementById('sendBtn').onclick = function() {
+            let text = messageField.value.trim();
+            if (!text || !currentUser) return;
+            
+            let msg = {
+                username: currentUser,
+                text: text,
+                time: getTime()
+            };
+            
+            messages.push(msg);
+            saveData();
+            addMessage(msg, true);
+            messageField.value = '';
+        };
+
+        document.getElementById('messageField').onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('sendBtn').click();
+            }
+        };
+
+        document.getElementById('passwordField').onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginBtn').click();
+            }
+        };
+
+        // Инициализация
+        window.onload = function() {
+            // Добавляем тестового пользователя
+            if (!users['admin']) {
+                users['admin'] = { username: 'admin', password: hashPass('admin123') };
+                saveData();
+            }
+        };
+    </script>
+</body>
+</html>
